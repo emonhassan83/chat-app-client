@@ -1,15 +1,72 @@
-import React from "react";
+import React, { useState } from "react";
 import styled from "styled-components";
-import { Link } from "react-router-dom";
+import { Link, useNavigate } from "react-router-dom";
 import Logo from "../assets/logo.svg";
+import { ToastContainer, toast } from "react-toastify";
+import "react-toastify/dist/ReactToastify.css";
+import axios from "axios";
+import { registerRoute } from "../utils/APIRoutes";
 
 const Register = () => {
-  const handleSubmit = (e) => {
-    e.preventDefault();
-    alert("form");
+  const navigate = useNavigate();
+  const [values, setValues] = useState({
+    username: "",
+    email: "",
+    password: "",
+    confirmPassword: "",
+  });
+
+  const toastOptions = {
+    position: "bottom-right",
+    autoClose: 8000,
+    pauseOnHover: true,
+    draggable: true,
+    theme: "dark",
   };
 
-  const handleChange = (e) => {};
+  const handleSubmit = async (e) => {
+    e.preventDefault();
+    if (handleValidations()) {
+      const { username, email, password } = values;
+      const { data } = await axios.post(registerRoute, {
+        username,
+        email,
+        password,
+      });
+      if (data.status === false) {
+        toast.error(data.message, toastOptions)
+      }
+      if (data.status === true) {
+        localStorage.setItem("chat-app-user", JSON.stringify(data.username))
+      }
+      navigate("/");
+    }
+  };
+
+  const handleValidations = () => {
+    const { username, email, password, confirmPassword } = values;
+    if (password !== confirmPassword) {
+      toast.error("Password and confirm password do not match", toastOptions);
+      return false;
+    } else if (username.length < 3) {
+      toast.error("Username should be gether than 3 character", toastOptions);
+      return false;
+    } else if (password.length < 8) {
+      toast.error(
+        "Password should be equal or gether than 8 character",
+        toastOptions
+      );
+      return false;
+    } else if (email === "") {
+      toast.error("email is required", toastOptions);
+      return false;
+    }
+    return true;
+  };
+
+  const handleChange = (e) => {
+    setValues({ ...values, [e.target.name]: e.target.value });
+  };
 
   return (
     <>
@@ -21,7 +78,7 @@ const Register = () => {
           </div>
           <input
             type="text"
-            placeholder="Username"
+            placeholder="username"
             name="username"
             onChange={(e) => handleChange(e)}
           />
@@ -49,6 +106,7 @@ const Register = () => {
           </span>
         </form>
       </FormContainer>
+      <ToastContainer />
     </>
   );
 };
@@ -96,28 +154,28 @@ const FormContainer = styled.div`
       }
     }
     button {
-        background-color: #997af0;
-        color: white;
-        padding: 1rem 2rem;
-        border: none;
-        font-weight: 400;
-        cursor: pointer;
-        border-radius: 0.4rem;
-        font-size: 1rem;
-        text-transform: uppercase;
-        transition: 0.5s ease-in-out;
-        &:hover {
-            background-color: #4e0eff;
-        }
+      background-color: #997af0;
+      color: white;
+      padding: 1rem 2rem;
+      border: none;
+      font-weight: 400;
+      cursor: pointer;
+      border-radius: 0.4rem;
+      font-size: 1rem;
+      text-transform: uppercase;
+      transition: 0.5s ease-in-out;
+      &:hover {
+        background-color: #4e0eff;
+      }
     }
     span {
-        color: white;
-        text-transform: uppercase;
-        a {
-            color: #4e0eff;
-            text-decoration: none;
-            font-weight: bold;
-        }
+      color: white;
+      text-transform: uppercase;
+      a {
+        color: #4e0eff;
+        text-decoration: none;
+        font-weight: bold;
+      }
     }
   }
 `;
